@@ -1,0 +1,161 @@
+import time
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
+
+
+cred = credentials.Certificate('serviceKey.json')
+
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://fir-db-7be24.firebaseio.com'
+})
+ref = db.reference('/')
+
+class offences:
+    def __init__(self, rfid_ID, timestamp, offence_type):
+        self.rfid_ID = rfid_ID
+        self.timestamp = timestamp
+        self.offence_type = offence_type
+
+    def add(self):
+        ref1 = ref.child('Offences')
+        ref1.push({
+                'rfid_ID': self.rfid_ID,
+                'timestamp': self.timestamp,
+                'offence_type': self.offence_type
+            })
+
+    def get_by_rfid(self, rfid_ID):
+        ref1 = fa.db.reference('Offences')
+        result = ref1.order_by_child('rfid_ID').equal_to(rfid_ID).limit_to_first(1).get()
+        for key, value in result.items():
+            #print('{0}:{1} '.format(key, value))
+            for x, y in value.items():
+                print('{0}:{1} '.format(x, y))
+
+"""
+ref.set({
+    'Details':
+        {
+            'rfid':'null',
+            'name_plate':'null',
+            'driver_no':'null',
+            'car_type':'null',
+        }
+})
+"""
+
+class scan_details:
+    def __init__(self, rfid_ID, scanner_id, timestamp):
+        self.rfid_ID = rfid_ID
+        self.scanner_id = scanner_id
+        self.timestamp = timestamp
+
+    def add(self):
+        ref1 = ref.child('Scan_Details')
+        ref1.push({
+                'rfid': self.rfid_ID,
+                'time': self.timestamp,
+                'scanner_id': self.scanner_id
+            })
+
+    def get_by_rfid(self, rfid_ID):
+        ref1 = db.reference('Scan_Details')
+        try:
+            result = ref1.order_by_child('rfid').equal_to(rfid_ID).limit_to_first(5).get()
+            for key, value in result.items():
+                for x, y in value.items():
+                    #print(value.items())
+                    print('{0}:{1} '.format(x, y))
+        except:
+            print("Exception occured. No entry of given ID in db\n")
+
+
+class vehicle_details:
+    def __init__(self):
+        self.rfid_ID = None
+
+    def __init__(self, rfid_ID, vehicle_class, number_plate, owner_name, owner_contact, prev_offences):
+        self.rfid_ID = rfid_ID
+        self.vehicle_class = vehicle_class
+        self.number_plate = number_plate
+        self.owner_name = owner_name
+        self.owner_contact = owner_contact
+        self.prev_offences = prev_offences
+
+    def add(self):
+        ref1 = ref.child('Vehicle_details')
+        ref1.push({
+                'rfid_ID': self.rfid_ID,
+                'vehicle_class': self.vehicle_class,
+                'number_plate': self.number_plate,
+                'owner_name' : self.owner_name,
+                'owner_contact' : self.owner_contact,
+                'prev_offences' : self.prev_offences
+            })
+
+
+    def get_by_rfid(self, rfid_ID):
+        ref1 = db.reference('Vehicle_details')
+        result = ref1.order_by_child('rfid_ID').equal_to(rfid_ID).limit_to_first(10).get()
+        for key, value in result.items():
+            #print(value['timestamp'])
+            for x, y in value.items():
+                print('{0}:{1} '.format(x, y))
+
+    def get_class_by_rfid(self, rfid_ID):
+        ref1 = db.reference('Vehicle_details')
+        result = ref1.order_by_child('rfid_ID').equal_to(rfid_ID).limit_to_first(1).get()
+        for key, value in result.items():
+            return value['vehicle_class']
+
+
+'''
+def add(temp):
+    #import tagScan
+    t = time.localtime()
+    current_time = time.strftime("%H:%M:%S", t)
+    #hour = time.strftime("%H", t)
+    hr_chk = t.tm_hour
+    offence_type = "heavy_duty" #offence check function
+    if(hr_chk<6) or (hr_chk>22):
+        print("blah")
+        o = offences(temp,current_time,offence_type)
+        o.add()
+    else:
+        print("Correct time for heavy duty")
+
+    #current_date = datetime.datetime("%x")
+    ref1 = ref.child('Scan_Details')
+    ref1.push({
+            'rfid': temp,
+            #'time': {'.sv': 'timestamp'},
+            'time': current_time,
+            'scanner_id': 1
+            #'date': current_date,
+        })
+
+def get_by_rfid(temp):
+    ref1 = db.reference('Scan_Details')
+    try:
+        result = ref1.order_by_child('rfid').equal_to(temp).limit_to_first(10).get()
+        for key, value in result.items():
+            for x, y in value.items():
+                #print(value.items())
+                print('{0}:{1} '.format(x, y))
+    except:
+        print("Exception occured.No entry of given ID in db\n")
+'''
+
+"""
+def add():
+    import scan_code
+    ref1 = ref.child('Details')
+    ref1.push({
+            'rfid': scan_code.temp,
+            'name_plate': 'xyz',
+            'driver_no': 12345,
+            'car_type': 'Heavy_Weight'
+        })
+
+"""
