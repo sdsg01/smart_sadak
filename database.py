@@ -1,4 +1,4 @@
-import time
+import time, datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -52,15 +52,21 @@ class scan_details:
         self.timestamp = timestamp
 
     def add(self):
-        ref1 = ref.child('Scan_Details')
+        ref1 = ref.child('Scan_Details_' + str(self.scanner_id))
         ref1.push({
+                'rfid': self.rfid_ID,
+                'time': self.timestamp,
+                #'scanner_id': self.scanner_id
+            })
+        ref_log = ref.child('Scan_Details_log')
+        ref_log.push({
                 'rfid': self.rfid_ID,
                 'time': self.timestamp,
                 'scanner_id': self.scanner_id
             })
 
     def get_by_rfid(self, rfid_ID):
-        ref1 = db.reference('Scan_Details')
+        ref1 = db.reference('Scan_Details_log')
         try:
             result = ref1.order_by_child('rfid').equal_to(rfid_ID).limit_to_first(5).get()
             for key, value in result.items():
@@ -108,6 +114,31 @@ class vehicle_details:
         result = ref1.order_by_child('rfid_ID').equal_to(rfid_ID).limit_to_first(1).get()
         for key, value in result.items():
             return value['vehicle_class']
+
+
+def get_latest_time(rfid_ID, scanner_ID):
+    ref1 = ref.child('Scan_Details_' + str(scanner_ID))
+    q = ref1.order_by_child('rfid').equal_to(rfid_ID).limit_to_last(1).get()
+    for key, val in q.items():
+        return val['time']
+
+def get_speed(rfid_ID, start, end, distance):
+        timestamp1 = get_latest_time(rfid_ID, start)
+        timestamp2 = get_latest_time(rfid_ID, end)
+        a1 = time.strptime(timestamp1, "%H:%M:%S")
+        a2 = time.strptime(timestamp2, "%H:%M:%S")
+        sec1=datetime.timedelta(hours=a1.tm_hour, minutes=a1.tm_min, seconds=a1.tm_sec).seconds
+        sec2=datetime.timedelta(hours=a2.tm_hour, minutes=a2.tm_min, seconds=a2.tm_sec).seconds
+        duration = sec2 - sec1
+        return distance / duration
+
+
+
+def remove(rfid_ID, scanner_ID):
+    ref1 = ref.child('Scan_Details_' + str(scanner_ID))
+    result = ref1.order_by_child('rfid').equal_to(rfid_ID).limit_to_last(1).get()
+    for i in result.keys():
+        ref1.child(i).delete()
 
 
 '''
